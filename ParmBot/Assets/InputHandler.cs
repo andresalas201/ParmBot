@@ -9,9 +9,13 @@ public class InputHandler : MonoBehaviour
 {
     public TMP_InputField inputField;
     private string API_KEY;
-    private const string MODEL = "gemini-2.5-flash-lite";
+    private const string MODEL = "gemini-3.1-flash-lite-preview";
     private string URL;
     private TMP_Text conversationText;
+
+    private string startingPrompt = "You are ParmBot, a chatbot made to talk about news\n" +
+       "You should talk informally and base everything you say on news articles found on the web, always cite the article where you got the information\n" +
+        "Talk in Spanish";
 
     [System.Serializable]
     private class Config
@@ -65,14 +69,13 @@ public class InputHandler : MonoBehaviour
               + MODEL + ":generateContent?key=" + API_KEY;
 
         this.conversationText = GameObject.FindWithTag("Conversation").GetComponent<TMP_Text>();
-        this.conversationText.text = "ParmBot: Bienvenido, soy ParmBot, tu ayudante para aprender";
+        this.conversationText.text = "\nParmBot: Bienvenido, soy ParmBot, tu ayudante para aprender";
         this.inputField = GameObject.FindWithTag("Input").GetComponent<TMP_InputField>();
         inputField.onEndEdit.AddListener(Submit);
     }
 
     void Submit(string value)
     {
-        Debug.Log("Toilet");
         var keyboard = Keyboard.current;
         if (keyboard != null &&
             (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
@@ -80,14 +83,24 @@ public class InputHandler : MonoBehaviour
             Debug.Log("Se envía a gemini");
             this.conversationText.text += "\nUsuario: " + value;
             StartCoroutine(CallGemini(value));
+            this.inputField.text = "";
         }
     }
 
     public IEnumerator CallGemini(string prompt)
     {
+        string fullPrompt = (this.startingPrompt + this.conversationText.text)
+        .Replace("\\", "\\\\")
+        .Replace("\"", "\\\"")
+        .Replace("\n", "\\n")
+        .Replace("\r", "");
+
         string jsonBody = $@"{{
             ""contents"": [{{
-                ""parts"": [{{""text"": ""{this.conversationText.text}""}}]
+                ""parts"": [{{""text"": ""{fullPrompt}""}}]
+            }}],
+            ""tools"": [{{
+                ""google_search"": {{}}
             }}]
         }}";
 
@@ -110,6 +123,7 @@ public class InputHandler : MonoBehaviour
         else
         {
             Debug.LogError("Error: " + request.error);
+            Debug.LogError("Response body: " + request.downloadHandler.text);
         }
     }
 
