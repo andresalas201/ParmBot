@@ -1,9 +1,10 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Text;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class InputHandler : MonoBehaviour
 {
@@ -47,6 +48,36 @@ public class InputHandler : MonoBehaviour
         public string text;
     }
 
+    [System.Serializable]
+    private class RequestBody
+    {
+        public List<ConversationTurn> contents;
+        public SystemInstruction system_instruction;
+        public Tool[] tools;
+    }
+
+    [System.Serializable]
+    private class SystemInstruction
+    {
+        public Part[] parts;
+    }
+
+    [System.Serializable]
+    private class ConversationTurn
+    {
+        public string role;
+        public Part[] parts;
+    }
+
+    [System.Serializable]
+    private class Tool
+    {
+        public GoogleSearch google_search;
+    }
+
+    [System.Serializable]
+    private class GoogleSearch { }
+
     void Awake()
     {
         // Load key from Resources/config.json
@@ -80,29 +111,34 @@ public class InputHandler : MonoBehaviour
         if (keyboard != null &&
             (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
         {
-            Debug.Log("Se env�a a gemini");
+            Debug.Log("Se envía a gemini");
             this.conversationText.text += "\nUsuario: " + value;
             StartCoroutine(CallGemini(value));
             this.inputField.text = "";
         }
     }
+    private List<ConversationTurn> history = new();
 
-    public IEnumerator CallGemini(string prompt)
+    public IEnumerator CallGemini(string userMessage)
     {
-        string fullPrompt = (this.startingPrompt + this.conversationText.text)
-        .Replace("\\", "\\\\")
-        .Replace("\"", "\\\"")
-        .Replace("\n", "\\n")
-        .Replace("\r", "");
+        history.Add(new ConversationTurn
+        {
+            role = "user",
+            parts = new Part[] { new Part { text = userMessage } }
+        });
 
-        string jsonBody = $@"{{
-            ""contents"": [{{
-                ""parts"": [{{""text"": ""{fullPrompt}""}}]
-            }}],
-            ""tools"": [{{
-                ""google_search"": {{}}
-            }}]
-        }}";
+        var requestBody = new RequestBody
+        {
+            system_instruction = new SystemInstruction
+            {
+                parts = new Part[] { new Part { text = startingPrompt } }
+            },
+            contents = history,
+            //tools = new Tool[] { new Tool { google_search = new GoogleSearch() } }
+        };
+
+        string jsonBody = JsonUtility.ToJson(requestBody);
+        Debug.Log("Sending JSON: " + jsonBody);
 
         byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
 
@@ -115,17 +151,31 @@ public class InputHandler : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            GeminiResponse response = JsonUtility.FromJson<GeminiResponse>(request.downloadHandler.text);
-            string text = response.candidates[0].content.parts[0].text;
-            Debug.Log("Gemini says: " + text);
-            this.conversationText.text +=  "\nParmbot: " + text;
+            GeminiResponse response = JsonUtility.FromJson<GeminiResponse>(
+                request.downloadHandler.text
+            );
+            string replyText = response.candidates[0].content.parts[0].text;
+
+            history.Add(new ConversationTurn
+            {
+                role = "model",
+                parts = new Part[] { new Part { text = replyText } }
+            });
+
+            conversationText.text += "\nParmbot: " + replyText;
         }
         else
         {
-            Debug.LogError("Error: " + request.error);
-            Debug.LogError("Response body: " + request.downloadHandler.text);
+            Debug.LogError("HTTP Code: " + request.responseCode);
+            Debug.LogError("Response: " + request.downloadHandler.text);
         }
     }
+
+    private string EscapeJson(string s) => s
+        .Replace("\\", "\\\\")
+        .Replace("\"", "\\\"")
+        .Replace("\n", "\\n")
+        .Replace("\r", "");
 
     void OnDestroy()
     {
