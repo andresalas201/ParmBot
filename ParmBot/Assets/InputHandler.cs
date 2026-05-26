@@ -10,7 +10,7 @@ public class InputHandler : MonoBehaviour
 {
     public TMP_InputField inputField;
     private string API_KEY;
-    private const string MODEL = "gemini-3.1-flash-lite-preview";
+    private const string MODEL = "gemini-3.1-flash-lite";
     private string URL;
     private TMP_Text conversationText;
 
@@ -163,6 +163,7 @@ public class InputHandler : MonoBehaviour
             });
 
             conversationText.text += "\nParmbot: " + replyText;
+
         }
         else
         {
@@ -170,6 +171,7 @@ public class InputHandler : MonoBehaviour
             Debug.LogError("Response: " + request.downloadHandler.text);
         }
     }
+
 
     private string EscapeJson(string s) => s
         .Replace("\\", "\\\\")
