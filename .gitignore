@@ -92,3 +92,6 @@ ParmBot/Assets/SceneDependencyCache*
 # API key
 ParmBot/Assets/Resources/config.json
 ParmBot/Assets/Resources/config.json.meta
+
+# Python
+__PyCache__
