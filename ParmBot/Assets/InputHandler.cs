@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using RESTObjects;
 using NewsFetch;
 using Summarizer;
+using TTSHandling;
 
 public class InputHandler : MonoBehaviour
 {
@@ -22,6 +23,7 @@ public class InputHandler : MonoBehaviour
     public SummaryHandler Summarizer;
     private string summary;
     private StringBuilder articleContext;
+    private TTSHandler ttsHandler;
 
     private string startingPrompt = "You are ParmBot, a chatbot made to talk about news\n" +
        "You should talk informally and directly. Base everything you say on the news articles given, always cite the article where you got the information\n" +
@@ -42,6 +44,7 @@ public class InputHandler : MonoBehaviour
         API_KEY = config.gemini_key;
         newsFetcher = gameObject.AddComponent<NewsFetchHandler>();
         Summarizer = gameObject.AddComponent<SummaryHandler>();
+        ttsHandler = gameObject.AddComponent<TTSHandler>();
     }
 
     void Start()
@@ -52,6 +55,7 @@ public class InputHandler : MonoBehaviour
 
         this.conversationText = GameObject.FindWithTag("Conversation").GetComponent<TMP_Text>();
         this.conversationText.text = "\nParmBot: Bienvenido, soy ParmBot, tu ayudante para aprender";
+        this.ttsHandler.Speak("Bienvenido, soy ParmBot, tu ayudante para aprender");
         this.inputField = GameObject.FindWithTag("Input").GetComponent<TMP_InputField>();
         inputField.onEndEdit.AddListener(Submit);
     }
@@ -106,6 +110,7 @@ public class InputHandler : MonoBehaviour
                 parts = new Part[] { new Part { text = this.summary } }
             });
             conversationText.text += "\n\nParmbot: " + this.summary;
+            this.ttsHandler.Speak(summary);
             this.CreateContext();
         },
         onError: err => Debug.LogError(err));
@@ -170,6 +175,7 @@ public class InputHandler : MonoBehaviour
             });
 
             conversationText.text += "\n\nParmbot: " + replyText;
+            this.ttsHandler.Speak(replyText);
 
         }
         else
