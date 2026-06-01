@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Conversation
   - Input
+  - ParmSprite
   layers:
   - Default
   - TransparentFX

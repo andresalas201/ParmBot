@@ -54,8 +54,8 @@ public class InputHandler : MonoBehaviour
               + MODEL + ":generateContent?key=" + API_KEY;
 
         this.conversationText = GameObject.FindWithTag("Conversation").GetComponent<TMP_Text>();
-        this.conversationText.text = "\nParmBot: Bienvenido, soy ParmBot, tu ayudante para aprender";
-        this.ttsHandler.Speak("Bienvenido, soy ParmBot, tu ayudante para aprender");
+        this.conversationText.text = "\nParmBot: Bienvenido, soy ParmBot, tu ayudante para aprender\nPara empezar, escribe el tema del que deseas hablar";
+        this.ttsHandler.Speak("Bienvenido, soy ParmBot, tu ayudante para aprender Para empezar, escribe el tema del que deseas hablar");
         this.inputField = GameObject.FindWithTag("Input").GetComponent<TMP_InputField>();
         inputField.onEndEdit.AddListener(Submit);
     }
@@ -94,6 +94,7 @@ public class InputHandler : MonoBehaviour
         Summarizer.Summarize(articles,
         onSuccess: summary =>
         {
+            summary = summary.Replace("*", "");
             this.summary = summary;
             this.summary += "\nFuentes:\n";
             this.summary += "=========================";
@@ -173,7 +174,7 @@ public class InputHandler : MonoBehaviour
                 role = "model",
                 parts = new Part[] { new Part { text = replyText } }
             });
-
+            replyText = replyText.Replace("*", "");
             conversationText.text += "\n\nParmbot: " + replyText;
             this.ttsHandler.Speak(replyText);
 
