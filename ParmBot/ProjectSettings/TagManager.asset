@@ -7,6 +7,8 @@ TagManager:
   - Conversation
   - Input
   - ParmSprite
+  - AudioSprite
+  - AudioButton
   layers:
   - Default
   - TransparentFX

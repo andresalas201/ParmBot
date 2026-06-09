@@ -10,15 +10,18 @@ namespace TTSHandling
 
         [Header("Talking Animation")]
         [SerializeField] private Animator characterAnimator;
+        [SerializeField] private Animator audioAnimator;
 
         private Process _ttsProcess;
         private bool isSpeaking = false;
+        private bool isMuted = false;
 
         private readonly object processLock = new object();
 
         private void Awake()
         {
             characterAnimator = GameObject.FindWithTag("ParmSprite").GetComponent<Animator>();
+            audioAnimator = GameObject.FindWithTag("AudioSprite").GetComponent<Animator>();
         }
 
         public void Speak(string text)
@@ -26,38 +29,40 @@ namespace TTSHandling
             if (string.IsNullOrEmpty(text)) return;
 
             StopSpeaking();
-
-            SetTalking(true);
-            isSpeaking = true;
-
-            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            if (!isMuted)
             {
-                string safe = text.Replace("'", "");
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "powershell",
-                    Arguments = $"-Command \"Add-Type -AssemblyName System.Speech; " +
-                                $"$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
-                                $"$s.SelectVoice('{voiceName}'); " +
-                                $"$s.Speak('{safe}');\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
+                SetTalking(true);
+                isSpeaking = true;
 
-                Process newProcess = Process.Start(psi);
-                lock (processLock)
+                System.Threading.ThreadPool.QueueUserWorkItem(_ =>
                 {
-                    _ttsProcess = newProcess;
-                }
+                    string safe = text.Replace("'", "");
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "powershell",
+                        Arguments = $"-Command \"Add-Type -AssemblyName System.Speech; " +
+                                    $"$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+                                    $"$s.SelectVoice('{voiceName}'); " +
+                                    $"$s.Speak('{safe}');\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
 
-                newProcess?.WaitForExit();
+                    Process newProcess = Process.Start(psi);
+                    lock (processLock)
+                    {
+                        _ttsProcess = newProcess;
+                    }
 
-                lock (processLock)
-                {
-                    if (_ttsProcess == newProcess)
-                        isSpeaking = false;
-                }
-            });
+                    newProcess?.WaitForExit();
+
+                    lock (processLock)
+                    {
+                        if (_ttsProcess == newProcess)
+                            isSpeaking = false;
+                    }
+                });
+            }
         }
 
         private void Update()
@@ -96,6 +101,16 @@ namespace TTSHandling
 
             isSpeaking = false;
             SetTalking(false);
+        }
+
+        public void ToggleMute()
+        {
+            if (!isMuted)
+            {
+                StopSpeaking();
+            } 
+            isMuted = !isMuted;
+            audioAnimator.SetBool("isMuted", isMuted);
         }
 
         private void OnDestroy()
