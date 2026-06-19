@@ -4,6 +4,14 @@
 
 Contiene una serie de PDFs explicando los objetivos, antecedentes y metodologia de la investigación respecto a Parmbot, la versión más reciente y avanzada es el archivo Entrega2.pdf. También se incluye un html con un pequeño ejemplo de guión para llevar a cabo el experimento.
 
+## Graphs
+
+Contiene los gráficos de caja de los resultados finales de la prueba piloto realizada como parte de la investigación
+
+## Data
+
+Contiene los datos de la prueba piloto en .csv y un notebook que realiza limpiado de los mismos y genera gráficos a partir de estos.
+
 ## ParmBot
 
 Contiene los archivos de Unity necesarios para correr ParmBot, para abrir ParmBot dentro de este motor simplemente se debe abrir Unity Hub, agregar un proyecto de disco y elegir este folder.
