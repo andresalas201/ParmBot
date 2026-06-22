@@ -2,7 +2,7 @@
 
 ## Docs
 
-Contiene una serie de PDFs explicando los objetivos, antecedentes y metodologia de la investigación respecto a Parmbot, la versión más reciente y avanzada es el archivo Entrega2.pdf. También se incluye un html con un pequeño ejemplo de guión para llevar a cabo el experimento.
+Contiene una serie de PDFs explicando los objetivos, antecedentes y metodologia de la investigación respecto a Parmbot, la versión más reciente y avanzada es el archivo Entrega3.pdf. También se incluyen un html con un pequeño ejemplo de guión para llevar a cabo el experimento y un pdf que contiene la presentación respecto al artículo.
 
 ## Graphs
 
